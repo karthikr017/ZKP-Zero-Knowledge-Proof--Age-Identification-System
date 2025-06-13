@@ -1,5 +1,3 @@
-import { createHash } from "crypto"
-
 /**
  * Calculates age from birthdate
  * @param birthdate The user's birthdate
@@ -18,6 +16,19 @@ function calculateAge(birthdate: Date): number {
 }
 
 /**
+ * Creates a SHA-256 hash using the Web Crypto API
+ * @param data The string to hash
+ * @returns Hex string of the hash
+ */
+async function sha256(data: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const dataBuffer = encoder.encode(data)
+  const hashBuffer = await crypto.subtle.digest("SHA-256", dataBuffer)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+}
+
+/**
  * Generates a Zero-Knowledge Proof for age verification
  *
  * This is a simplified implementation for demonstration purposes.
@@ -27,7 +38,7 @@ function calculateAge(birthdate: Date): number {
  * @param ageThreshold The minimum age to prove
  * @returns A proof string that can be verified
  */
-export function generateAgeProof(birthdate: Date, ageThreshold: number): string {
+export async function generateAgeProof(birthdate: Date, ageThreshold: number): Promise<string> {
   // Calculate the user's age
   const age = calculateAge(birthdate)
 
@@ -49,8 +60,8 @@ export function generateAgeProof(birthdate: Date, ageThreshold: number): string 
   // Create a random nonce for this proof
   const nonce = Math.random().toString(36).substring(2, 15)
 
-  // Create a hash of the birthdate
-  const birthdateHash = createHash("sha256").update(birthdate.toISOString()).digest("hex")
+  // Create a hash of the birthdate using Web Crypto API
+  const birthdateHash = await sha256(birthdate.toISOString())
 
   // Create the proof data structure
   const proofData = {
@@ -66,7 +77,7 @@ export function generateAgeProof(birthdate: Date, ageThreshold: number): string 
   const proofString = JSON.stringify(proofData)
 
   // Create a verification hash that binds all the data together
-  const verificationHash = createHash("sha256").update(proofString).digest("hex").substring(0, 16) // Use first 16 chars for brevity
+  const verificationHash = (await sha256(proofString)).substring(0, 16) // Use first 16 chars for brevity
 
   // Combine the proof data with the verification hash
   const finalProof = {
@@ -84,7 +95,7 @@ export function generateAgeProof(birthdate: Date, ageThreshold: number): string 
  * @param requiredAgeThreshold The minimum age required by the verifier
  * @returns Boolean indicating if the proof is valid
  */
-export function verifyAgeProof(proofString: string, requiredAgeThreshold: number): boolean {
+export async function verifyAgeProof(proofString: string, requiredAgeThreshold: number): Promise<boolean> {
   try {
     // Decode the proof
     const proofData = JSON.parse(atob(proofString))
@@ -101,10 +112,7 @@ export function verifyAgeProof(proofString: string, requiredAgeThreshold: number
 
     // Verify the proof hasn't been tampered with
     const { s, ...dataWithoutSignature } = proofData
-    const verificationHash = createHash("sha256")
-      .update(JSON.stringify(dataWithoutSignature))
-      .digest("hex")
-      .substring(0, 16)
+    const verificationHash = (await sha256(JSON.stringify(dataWithoutSignature))).substring(0, 16)
 
     if (verificationHash !== proofData.s) {
       return false

@@ -41,18 +41,23 @@ export function CombinedSolution() {
 
           await new Promise((resolve) => setTimeout(resolve, 2000))
 
-          // Generate age proof
-          const birthdateObj = new Date(birthdate)
-          const proof = generateAgeProof(birthdateObj, 18)
+          try {
+            // Generate age proof
+            const birthdateObj = new Date(birthdate)
+            const proof = await generateAgeProof(birthdateObj, 18)
 
-          // Issue credential with the proof
-          const newCredential = await issueDIDCredential(did, "AgeVerification", {
-            ageVerified: "18+",
-            proofType: "ZKP",
-            proofId: proof.substring(0, 20), // Use part of the proof as an ID
-          })
+            // Issue credential with the proof
+            const newCredential = await issueDIDCredential(did, "AgeVerification", {
+              ageVerified: "18+",
+              proofType: "ZKP",
+              proofId: proof.substring(0, 20), // Use part of the proof as an ID
+            })
 
-          setCredential(newCredential)
+            setCredential(newCredential)
+          } catch (err) {
+            console.error("Error generating proof:", err)
+            setError("Failed to generate proof")
+          }
           break
 
         case 2: // Create blockchain attestation

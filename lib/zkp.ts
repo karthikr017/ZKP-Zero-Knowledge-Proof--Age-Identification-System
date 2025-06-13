@@ -1,5 +1,3 @@
-import { createHash } from "crypto"
-
 /**
  * Generates a Zero-Knowledge Proof based on a secret value and public identifier
  *
@@ -10,17 +8,23 @@ import { createHash } from "crypto"
  * @param publicValue A public identifier or challenge
  * @returns A proof string that can be verified
  */
-export function generateZkpProof(secretValue: string, publicValue: string): string {
+export async function generateZkpProof(secretValue: string, publicValue: string): Promise<string> {
   // In a real ZKP system, this would involve complex cryptographic operations
   // This is a simplified version using hash functions
 
-  // Create a commitment from the secret
-  const commitment = createHash("sha256").update(secretValue).digest("hex")
+  // Create a commitment from the secret using Web Crypto API
+  const secretBuffer = new TextEncoder().encode(secretValue)
+  const secretHash = await crypto.subtle.digest("SHA-256", secretBuffer)
+  const commitment = Array.from(new Uint8Array(secretHash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
 
   // Create a proof by combining the commitment with the public value
-  const proof = createHash("sha256")
-    .update(commitment + publicValue)
-    .digest("hex")
+  const proofBuffer = new TextEncoder().encode(commitment + publicValue)
+  const proofHash = await crypto.subtle.digest("SHA-256", proofBuffer)
+  const proof = Array.from(new Uint8Array(proofHash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
 
   return proof
 }

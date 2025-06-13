@@ -30,11 +30,12 @@ export function ZkpIdentityDemo() {
     proofVerified: false,
   })
 
-  const handleGenerateProof = () => {
+  // Update the handleGenerateProof function to be async
+  const handleGenerateProof = async () => {
     if (!secretValue || !publicValue) return
 
     try {
-      const generatedProof = generateZkpProof(secretValue, publicValue)
+      const generatedProof = await generateZkpProof(secretValue, publicValue)
       setProof(generatedProof)
       setSteps((prev) => ({ ...prev, proofGenerated: true }))
     } catch (error) {

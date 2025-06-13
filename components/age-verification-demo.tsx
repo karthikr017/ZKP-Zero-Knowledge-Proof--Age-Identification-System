@@ -21,7 +21,8 @@ export function AgeVerificationDemo() {
   const [activeTab, setActiveTab] = useState("prover")
   const [error, setError] = useState<string | null>(null)
 
-  const handleGenerateProof = () => {
+  // Update the handleGenerateProof function to be async
+  const handleGenerateProof = async () => {
     if (!birthdate) {
       setError("Please enter your birthdate")
       return
@@ -35,7 +36,7 @@ export function AgeVerificationDemo() {
       }
 
       const threshold = Number.parseInt(ageThreshold)
-      const generatedProof = generateAgeProof(birthdateObj, threshold)
+      const generatedProof = await generateAgeProof(birthdateObj, threshold)
       setProof(generatedProof)
       setError(null)
     } catch (err) {
@@ -44,7 +45,8 @@ export function AgeVerificationDemo() {
     }
   }
 
-  const handleVerifyProof = () => {
+  // Update the handleVerifyProof function to be async
+  const handleVerifyProof = async () => {
     if (!verifierProof) {
       setError("Please enter a proof to verify")
       return
@@ -52,7 +54,7 @@ export function AgeVerificationDemo() {
 
     try {
       const threshold = Number.parseInt(verifierThreshold)
-      const result = verifyAgeProof(verifierProof, threshold)
+      const result = await verifyAgeProof(verifierProof, threshold)
       setVerificationResult(result)
       setError(null)
     } catch (err) {
